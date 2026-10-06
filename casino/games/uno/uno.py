@@ -260,6 +260,7 @@ def play_uno(ctx: GameContext) -> None:
             newgame = cinput("Please input either y or n. Would you like to start another game? (y/n)").lower()
         
     display_stats(stats, "uno")
+    display_stats(stats, "uno")
         
 
     
