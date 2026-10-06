@@ -6,6 +6,9 @@ from .player import Player
 from casino.types import GameContext
 from casino.utils import clear_screen, cprint, cinput, display_topbar
 from casino.cards import UnoDeck, UnoCard
+from casino.stats import GameStats, display_stats
+
+STARTING_CARDS: int =  1
 
 UNO_HEADER = """
 ┌───────────────────────────────┐
@@ -66,6 +69,11 @@ def print_hand(cards) :
         cprint(hand_string)
 
 def play_uno(ctx: GameContext) -> None:
+    # instantiate GameStats object
+    stats = GameStats("UNO", ctx.account.balance)
+    stats.most_cards = STARTING_CARDS
+    stats.rounds_played += 1
+    
     unodeck_ = UnoDeck()
     current_deck = unodeck_.cards 
     players: list[Player] = []
@@ -84,7 +92,7 @@ def play_uno(ctx: GameContext) -> None:
         players.append(Player(i,name))
         display_uno_topbar(ctx)
     
-    for i in range(7) :
+    for i in range(STARTING_CARDS) :
         for j in players :
             j.draw(current_deck)
     
@@ -109,6 +117,9 @@ def play_uno(ctx: GameContext) -> None:
             cprint("\nNONE\n")
         
         answer = cinput(DRAW_PROMPT).lower()
+        if (answer == "exit"):
+            break
+
         while (answer != "d" and answer != "p" and answer != "draw" and answer != "play"):
             cprint("Please input either P or D!")
             answer = cinput(DRAW_PROMPT).lower()
@@ -116,6 +127,11 @@ def play_uno(ctx: GameContext) -> None:
         if (answer == "d" or answer == "draw") :
             new_card = i.draw(current_deck)
             cprint("You drew \n" + str(new_card) + " from the pile.")
+
+            # update drawn stat if main account is drawing  
+            if i.id == 1:
+                stats.cards_drawn += 1
+
         elif (answer == "p" or answer == "play") :
             VALID_COLORS = ["red", "green", "blue", "yellow"]
             VALID_RANKS  = [str(n) for n in range(0, 10)] + ["draw_2", "skip", "reverse"]
@@ -156,14 +172,27 @@ def play_uno(ctx: GameContext) -> None:
                     if (answer == "draw" or answer == "d"):
                         new_card = i.draw(current_deck)
                         cprint("You drew \n" + str(new_card) + " from the pile.")
+
+                        if (i.id == 1):
+                            stats.cards_drawn += 1
                         break
 
             i.hand.remove(new_card)
+            print("player id is " + str(i.id))
+            if i.id == 1:
+                stats.cards_played += 1
+                
             if len(i.hand) == 0:
                 continueGame = False
                 display_uno_topbar(ctx)
                 cprint(f"{i.name} is the winner!")
-                cinput("Press enter when ready to exit")
+                if i.id == 1:
+                    stats.wins += 1
+                else:
+                    stats.losses += 1
+                    
+                if cinput("Would you like to start another game? (y/n)") == "y":
+                    play_uno(ctx)
                 break
             match new_card.rank:
                 case "skip":
@@ -177,6 +206,10 @@ def play_uno(ctx: GameContext) -> None:
                     currentPlayerIndex = (currentPlayerIndex + direction) % len(players)
                     players[currentPlayerIndex].draw(current_deck)
                     players[currentPlayerIndex].draw(current_deck)
+
+                    # update drawn stat if targeted player is main account
+                    if players[currentPlayerIndex].id == 1:
+                        stats.cards_drawn += 2
                 case "wild":
                     new_color = cinput("Choose a color for the wild card (green, yellow, red, or blue)!").lower()
                     while (new_color != "green" and  
@@ -198,12 +231,16 @@ def play_uno(ctx: GameContext) -> None:
                     players[currentPlayerIndex].draw(current_deck)
                     players[currentPlayerIndex].draw(current_deck)
                     players[currentPlayerIndex].draw(current_deck)
+
+                    # update drawn stat if targeted player is main account
+                    if players[currentPlayerIndex].id == 1:
+                        stats.cards_drawn += 4
             discard.append(new_card)
         cinput("Press enter when ready to switch to the next player")
         display_uno_topbar(ctx)
         currentPlayerIndex = (currentPlayerIndex + direction) % len(players)
         
-
+    display_stats(stats, "uno")
         
 
     

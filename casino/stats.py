@@ -19,7 +19,7 @@ class GameStats:
     # uno specific
     cards_drawn: int = 0
     cards_played: int = 0
-    most_cards_held: int = 0
+    most_cards: int = 0
 
     @property
     def net(self) -> int:
@@ -57,7 +57,7 @@ def display_stats(stats: GameStats, game: str="blackjack") -> None:
                 ("Wins", str(stats.wins)),
                 ("Losses", str(stats.losses)),
                 ("Cards Played", str(stats.cards_played)),
-                ("Most Cards Held", str(stats.most_cards_held)),
+                ("Most Cards Held", str(stats.most_cards)),
                 ("Win Rate", stats.win_rate),
             ]
 
