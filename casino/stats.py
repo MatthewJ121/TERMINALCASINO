@@ -5,13 +5,21 @@ from .utils import cprint, cinput, clear_screen
 
 @dataclass
 class GameStats:
+    # all stats for any game, not all will be used for every game
     game_name: str
     starting_balance: int
     ending_balance: int = 0
     rounds_played: int = 0
     wins: int = 0
     losses: int = 0
+    
+    # blackjack specific
     pushes: int = 0
+
+    # uno specific
+    cards_drawn: int = 0
+    cards_played: int = 0
+    most_cards: int = 0
 
     @property
     def net(self) -> int:
@@ -24,25 +32,34 @@ class GameStats:
         return f"{self.wins / self.rounds_played * 100:.1f}%"
 
 
-def display_stats(stats: GameStats) -> None:
+def display_stats(stats: GameStats, game: str="blackjack") -> None:
     """Display a post-game session summary."""
     clear_screen()
 
     net = stats.net
     net_str = f"+{net}" if net > 0 else str(net)
 
-    rows = [
-        ("Game", stats.game_name),
-        ("Hands Played", str(stats.rounds_played)),
-        ("Wins", str(stats.wins)),
-        ("Losses", str(stats.losses)),
-        ("Pushes", str(stats.pushes)),
-        ("Win Rate", stats.win_rate),
-        ("", ""),
-        ("Starting Balance", str(stats.starting_balance)),
-        ("Ending Balance", str(stats.ending_balance)),
-        ("Net Profit/Loss", net_str),
-    ]
+    match game:
+        case "blackjack":
+            rows = [
+                ("Game", stats.game_name),
+                ("Hands Played", str(stats.rounds_played)),
+                ("Wins", str(stats.wins)),
+                ("Losses", str(stats.losses)),
+                ("Pushes", str(stats.pushes)),
+                ("Win Rate", stats.win_rate),
+            ]
+        case "uno":
+            rows = [
+                ("Game", stats.game_name),
+                ("Rounds Played", str(stats.rounds_played)),
+                ("Cards Drawn", str(stats.cards_drawn)),
+                ("Wins", str(stats.wins)),
+                ("Losses", str(stats.losses)),
+                ("Cards Played", str(stats.cards_played)),
+                ("Most Cards Held", str(stats.most_cards)),
+                ("Win Rate", stats.win_rate),
+            ]
 
     label_width = max(len(r[0]) for r in rows)
     value_width = max(len(r[1]) for r in rows)
